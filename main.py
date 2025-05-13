@@ -70,7 +70,7 @@ def draw_lane_lines(image, lines, color=[255, 0, 0], thickness=10):
     left_line, right_line = lines
     if left_line is not None and right_line is not None:
         pts = np.array([left_line[0], left_line[1], right_line[1], right_line[0]], dtype=np.int32)
-        cv2.fillPoly(line_image, [pts], (0, 255, 0))  # Fill with green
+        cv2.fillPoly(line_image, [pts], (0, 255, 0))  
 
     for line in lines:
         if line is not None:
@@ -166,29 +166,24 @@ def process_frame(frame):
     upper_yellow = np.array([80, 255, 255])
     yellow_mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
 
-    # Morphological operations to clean up the mask
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     yellow_mask = cv2.morphologyEx(yellow_mask, cv2.MORPH_OPEN, kernel, iterations=1)
     yellow_mask = cv2.morphologyEx(yellow_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
 
-    # Apply blur and Canny edge detection
     blurred = cv2.GaussianBlur(yellow_mask, (5, 5), 0)
     edges = cv2.Canny(blurred, 50, 150)
 
-    # Dilate edges to make them more prominent
     edges = cv2.dilate(edges, kernel, iterations=1)
 
-    # Apply region of interest mask
     roi = region_selection(edges)
 
-    # Hough transform for line detection
     hough = hough_transform(roi)
 
     final_output = frame_with_objects
     turn = "Unknown"
     if hough is not None:
         lines = lane_lines(frame, hough)
-        turn = detect_turn_direction(frame, hough) #hereee
+        turn = detect_turn_direction(frame, hough) 
         final_output = draw_lane_lines(final_output, lines)
 
     # ➕ Overlay text at top-left corner
